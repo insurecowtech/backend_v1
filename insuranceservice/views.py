@@ -1,14 +1,10 @@
+from .serializers import AssetInsuranceSerializer, InsuranceClaimSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .models import InsuranceCompany, InsuranceType, InsurancePeriod, PremiumPercentage
 
-from Insurecow.utils import success_response
-from .models import InsuranceProduct, InsuranceCompany
-from .serializers import InsuranceProductSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
-
-
-#
 # class CreateInsuranceCompany(APIView):
 #     permission_classes = [IsAuthenticated]
 #     def post(self, request):
@@ -42,10 +38,6 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 #             serializer.save()
 #             return Response({'message': 'Insurance Period created successfully.', 'data': serializer.data}, status=status.HTTP_201_CREATED)
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import InsuranceCompany, InsuranceType, InsurancePeriod, PremiumPercentage
 
 class CompanyWiseInsuranceAPIView(APIView):
     def get(self, request, *args, **kwargs):
@@ -105,3 +97,24 @@ class CompanyWiseInsuranceAPIView(APIView):
             "data": data
         }, status=status.HTTP_200_OK)
 
+
+class AssetInsuranceCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = AssetInsuranceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InsuranceClaimCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = InsuranceClaimSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_bycreated_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

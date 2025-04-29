@@ -5,40 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import InsuranceCompany, InsuranceType, InsurancePeriod, PremiumPercentage
 
-# class CreateInsuranceCompany(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def post(self, request):
-#         serializer = InsuranceCompanySerializer(data=request.data, context={'request': request})
-#         if serializer.is_valid():
-#             try:
-#                 serializer.save()
-#                 return success_response("Insurance Company created successfully.")
-#
-#             except serializers.ValidationError as e:
-#                 return handle_serializer_error(e)
-#
-#         return validation_error_from_serializer(serializer)
-# class CreateScopeOfcover(APIView):
-#     permission_classes = [IsAuthenticatedOrReadOnly]
-#
-#     def post(self, request):
-#         serializer = ScopeOfcoverSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'message': 'Scope of Cover created successfully.', 'data': serializer.data}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#
-# class CreateInsurancePeriod(APIView):
-#     permission_classes = [IsAuthenticatedOrReadOnly]
-#
-#     def post(self, request):
-#         serializer = InsurancePeriodSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'message': 'Insurance Period created successfully.', 'data': serializer.data}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class CompanyWiseInsuranceAPIView(APIView):
     def get(self, request, *args, **kwargs):
         companies = InsuranceCompany.objects.all()

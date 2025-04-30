@@ -16,7 +16,6 @@ def validate_mobile_number(value):
         raise serializers.ValidationError("User already exists.")
     return value
 
-
 class LoginSerializer(serializers.Serializer):
     mobile_number = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -41,7 +40,6 @@ class LoginSerializer(serializers.Serializer):
             'access_token': token_obj.access_token,
             'refresh_token': token_obj.refresh_token,
         }
-
 
 class Step1Serializer(serializers.Serializer):
     mobile_number = serializers.CharField()
@@ -96,8 +94,6 @@ class Step1Serializer(serializers.Serializer):
         )
         print(f"OTP sent: {otp_code}")  # Replace with SMS sending
         return temp_user
-
-from django.core.exceptions import MultipleObjectsReturned
 
 class OTPVerifySerializer(serializers.Serializer):
     mobile_number = serializers.CharField()
@@ -161,6 +157,7 @@ class SetPasswordSerializer(serializers.Serializer):
             role=temp_user.role
         )
         return user
+
 class SetPersonalInfoSerializer(serializers.ModelSerializer):
     profile_image_url = serializers.SerializerMethodField()
 
@@ -249,7 +246,6 @@ class SetOrganizationInfoSerializer(serializers.ModelSerializer):
         )
         return user
 
-
 class SetFinancialInfoSerializer(serializers.Serializer):
     bank_name = serializers.CharField(required=True)
     branch_name = serializers.CharField(required=True)
@@ -289,3 +285,117 @@ class SetNomineeInfoSerializer(serializers.Serializer):
         user = validated_data.pop('user')
         UserNomineeInfo.objects.update_or_create(user=user, **validated_data)
         return user
+
+from rest_framework import serializers
+from .models import (
+    User, UserPersonalInfo, UserFinancialInfo, UserNomineeInfo,
+    OrganizationInfo, InsuranceCompany
+)
+
+
+class UserPersonalInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPersonalInfo
+        fields = '__all__'
+        read_only_fields = ['user']
+
+
+class UserFinancialInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFinancialInfo
+        fields = '__all__'
+        read_only_fields = ['user']
+
+
+class UserNomineeInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserNomineeInfo
+        fields = '__all__'
+        read_only_fields = ['user']
+
+
+class OrganizationInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationInfo
+        fields = '__all__'
+        read_only_fields = ['user']
+
+
+class InsuranceCompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InsuranceCompany
+        fields = '__all__'
+        read_only_fields = ['user']
+
+class UserSerializer(serializers.ModelSerializer):
+    personal_info = UserPersonalInfoSerializer()
+    financial_info = UserFinancialInfoSerializer()
+    nominee_info = UserNomineeInfoSerializer()
+    organization_info = OrganizationInfoSerializer(required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'mobile_number', 'password', 'role',
+            'personal_info', 'financial_info', 'nominee_info', 'organization_info',
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate_managed_by(self, value):
+        request_user = self.context['request'].user
+        if value:
+            if not request_user.is_superuser:
+                raise serializers.ValidationError("Only superusers can assign managed_by.")
+            if value.role_id != 2:
+                raise serializers.ValidationError("managed_by must be a user with role_id = 2.")
+        return value
+
+    def validate_onboarded_by(self, value):
+        if value and not (value.is_staff or value.is_superuser):
+            raise serializers.ValidationError("Onboarded_by must be a staff or superuser.")
+        return value
+
+
+    def create(self, validated_data):
+        personal_info_data = validated_data.pop('personal_info', None)
+        financial_info_data = validated_data.pop('financial_info', None)
+        nominee_info_data = validated_data.pop('nominee_info', None)
+        organization_info_data = validated_data.pop('organization_info', None)
+        password = validated_data.pop('password')
+
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+
+        # Personal Info
+        if personal_info_data:
+            personal_info, created = UserPersonalInfo.objects.get_or_create(user=user)
+            for key, value in personal_info_data.items():
+                setattr(personal_info, key, value)
+            personal_info.save()
+
+        # Financial Info
+        if financial_info_data:
+            financial_info, created = UserFinancialInfo.objects.get_or_create(user=user)
+            for key, value in financial_info_data.items():
+                setattr(financial_info, key, value)
+            financial_info.save()
+
+        # Nominee Info
+        if nominee_info_data:
+            nominee_info, created = UserNomineeInfo.objects.get_or_create(user=user)
+            for key, value in nominee_info_data.items():
+                setattr(nominee_info, key, value)
+            nominee_info.save()
+
+        # Organization Info (for roles 2 or 3 only)
+        if organization_info_data and user.role_id in (2, 3):
+            org_info, created = OrganizationInfo.objects.get_or_create(user=user)
+            for key, value in organization_info_data.items():
+                setattr(org_info, key, value)
+            org_info.save()
+
+        return user
+

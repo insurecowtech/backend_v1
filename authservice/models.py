@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken, TokenError
@@ -56,9 +58,27 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     mobile_number = models.CharField(max_length=15, unique=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
+    managed_by = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sub_users',
+        help_text="Must be a user with role_id = 2"
+    )
+
+    onboarded_by = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarded_users',
+        help_text="Only staff or superuser can onboard other users"
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+
 
     objects = UserManager()
 
@@ -72,6 +92,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         indexes = [
             models.Index(fields=["mobile_number"]),
         ]
+
+    def clean(self):
+        # Validate manager role
+        if self.managed_by and self.managed_by.role_id != 2:
+            raise ValidationError("The manager must have role_id = 2.")
+
+        # Validate onboarder is staff or superuser
+        if self.onboarded_by and not (self.onboarded_by.is_staff or self.onboarded_by.is_superuser):
+            raise ValidationError("Onboarded_by must be a staff or superuser.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # triggers clean()
+        super().save(*args, **kwargs)
 
 class OTPCategory(models.TextChoices):
     REGISTRATION = "registration", "Registration"
@@ -230,19 +263,30 @@ def create_user_token(sender, instance, created, **kwargs):
             token.generate_tokens()
             print(f"Tokens generated for {instance.mobile_number}")
 
-
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserPersonalInfo.objects.get_or_create(user=instance)
-        UserFinancialInfo.objects.get_or_create(user=instance)
-        UserNomineeInfo.objects.get_or_create(user=instance)
+        # Safely create related profiles only if they don't already exist
+        if not hasattr(instance, 'personal_info'):
+            UserPersonalInfo.objects.create(user=instance)
+
+        if not hasattr(instance, 'financial_info'):
+            UserFinancialInfo.objects.create(user=instance)
+
+        if not hasattr(instance, 'nominee_info'):
+            UserNomineeInfo.objects.create(user=instance)
+
         print(f"User profile created for {instance.mobile_number}")
-        if instance.role_id in (2,3):
-            OrganizationInfo.objects.get_or_create(user=instance)
-            print(f"Organization profile created for {instance.mobile_number}")
+
+        if instance.role_id in (2, 3):
+            if not hasattr(instance, 'organization_info'):
+                OrganizationInfo.objects.create(user=instance)
+                print(f"Organization profile created for {instance.mobile_number}")
+
         if instance.role_id == 3:
-            InsuranceCompany.objects.get_or_create(user=instance)
+            if not hasattr(instance, 'insurance_company'):
+                InsuranceCompany.objects.create(user=instance)
+
 
 @receiver(post_save, sender=OrganizationInfo)
 def update_insurance_company(sender, instance, created, **kwargs):

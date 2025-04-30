@@ -15,4 +15,6 @@ urlpatterns = [
 
     path('roles/', RoleListCreateAPIView.as_view(), name='role-list-create'),
     path('roles/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role-detail'),
+
+    path('users/sub-users/', SubUsersAPIView.as_view(), name='sub-users'),
 ]

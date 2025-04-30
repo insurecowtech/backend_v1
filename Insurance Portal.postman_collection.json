@@ -149,7 +149,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "// {\n//     \"mobile_number\": \"01728096101\",\n//     \"password\": \"your_secure_password\"\n// }\n\n{\n    \"mobile_number\": \"01728096198\",\n    \"password\": \"106219\"\n}",
+							"raw": "{\n    \"mobile_number\": \"01728096101\",\n    \"password\": \"your_secure_password\"\n}\n\n// {\n//     \"mobile_number\": \"01728096198\",\n//     \"password\": \"106219\"\n// }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -833,6 +833,16 @@
 							"key": "bin",
 							"value": "BIN67890",
 							"type": "text"
+						},
+						{
+							"key": "nid_front",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "nid_back",
+							"type": "file",
+							"src": []
 						}
 					]
 				},
@@ -1114,6 +1124,35 @@
 						"administrator",
 						"users",
 						"list",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get all sub user",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MDEyMjU2LCJpYXQiOjE3NDYwMDg2NTYsImp0aSI6IjQ4NWRjYWE5YzkyMDRjMDI5MWE5OGNhYTIzYmUzNzJjIiwidXNlcl9pZCI6Mn0.62NUsdh_NpJD4vvplbDWbqmrzdw_igVCULir0It0_pw"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/auth/users/sub-users/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"users",
+						"sub-users",
 						""
 					]
 				}

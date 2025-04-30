@@ -9,7 +9,8 @@ from django.conf import settings
 from administrator.views import IsSuperUser
 from .models import UserNomineeInfo, UserFinancialInfo, UserPersonalInfo
 from .serializers import Step1Serializer, OTPVerifySerializer, SetPasswordSerializer, LoginSerializer, \
-    SetPersonalInfoSerializer, SetFinancialInfoSerializer, SetNomineeInfoSerializer, SetOrganizationInfoSerializer
+    SetPersonalInfoSerializer, SetFinancialInfoSerializer, SetNomineeInfoSerializer, SetOrganizationInfoSerializer, \
+    SubUserSerializer
 from Insurecow.utils import handle_serializer_error, success_response, validation_error_from_serializer, error_response
 
 from rest_framework import status
@@ -276,3 +277,25 @@ class VerifyTokenView(APIView):
         except jwt.InvalidTokenError:
             return Response({"detail": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
 
+class SubUsersAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        current_user = request.user
+
+        # Avoid AttributeError if role is None
+        if current_user.is_superuser and current_user.role is None:
+            return error_response(
+                {"detail": "You are a superuser. Use the dedicated API to get all users."},
+                status_code=status.HTTP_403_FORBIDDEN
+            )
+
+        if not current_user.role or current_user.role.id != 2:
+            return error_response(
+                {"detail": "You are not authorized to view sub-users."},
+                status_code=status.HTTP_403_FORBIDDEN
+            )
+
+        sub_users = current_user.sub_users.all()
+        serializer = SubUserSerializer(sub_users, many=True)
+        return success_response("User List retrieved successfully.", data=serializer.data)

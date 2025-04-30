@@ -171,7 +171,9 @@ class SetPersonalInfoSerializer(serializers.ModelSerializer):
             'nid',
             'date_of_birth',
             'gender',
-            'tin'
+            'tin',
+            'nid_front',
+            'nid_back'
         ]
         extra_kwargs = {
             'profile_image': {'write_only': True}  # Only accept uploads, but don't show in GET
@@ -402,3 +404,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+class SubUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'mobile_number', 'role', 'is_active', 'date_joined']

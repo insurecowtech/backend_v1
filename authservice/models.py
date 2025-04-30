@@ -193,6 +193,8 @@ class UserPersonalInfo(TimestampModel):
     last_name = models.CharField(max_length=50)
     nid = models.CharField(max_length=50, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    nid_front = models.ImageField(null=True, blank=True)
+    nid_back = models.ImageField(null=True, blank=True)
 
     GENDER_CHOICES = (
         ('male', 'Male'),

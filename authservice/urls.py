@@ -12,4 +12,7 @@ urlpatterns = [
     path('nominee-info/', SetNomineeInfo.as_view(), name='nominee-info'),
     path('organization-info/', SetOrganizationInfo.as_view(), name='organization-info'),
     path('token/verify/', VerifyTokenView.as_view(), name='verify-token'),
+
+    path('roles/', RoleListCreateAPIView.as_view(), name='role-list-create'),
+    path('roles/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role-detail'),
 ]

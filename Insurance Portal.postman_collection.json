@@ -149,7 +149,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"mobile_number\": \"01728096101\",\n    \"password\": \"your_secure_password\"\n}\n\n// {\n//     \"mobile_number\": \"01728096198\",\n//     \"password\": \"106219\"\n// }",
+							"raw": "// {\n//     \"mobile_number\": \"01728096101\",\n//     \"password\": \"your_secure_password\"\n// }\n\n{\n    \"mobile_number\": \"01728096198\",\n    \"password\": \"106219\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -572,6 +572,163 @@
 								"v1",
 								"insurance",
 								"insurance-claim",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sms",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"Corp1Corp12\",\r\n    \"password\": \"Asdkj@4321\",\r\n    \"apicode\": \"5\",\r\n    \"msisdn\": [\r\n        \"8801728096198\"\r\n    ],\r\n    \"countrycode\": \"880\",\r\n    \"cli\": \"Test\",\r\n    \"messagetype\": \"1\",\r\n    \"message\": \"TEST SMS\",\r\n    \"clienttransid\": \"11111a1111b11\",\r\n    \"bill_msisdn\": \"8801xxxxxxxxx\",\r\n    \"tran_type\": \"T\",\r\n    \"request_type\": \"S\",\r\n    \"rn_code\": \"91\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://corpsms.banglalink.net/bl/api/v1/smsapigw/",
+							"protocol": "https",
+							"host": [
+								"corpsms",
+								"banglalink",
+								"net"
+							],
+							"path": [
+								"bl",
+								"api",
+								"v1",
+								"smsapigw",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "Roles",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/auth/roles/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"roles",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\": \"Admin\", \"is_active\": true}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/auth/roles/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"roles",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MDEyMjc0LCJpYXQiOjE3NDYwMDg2NzQsImp0aSI6ImY0ZTJkYmY4YjFkMzQ4OWE4YzAwMDgxOGE3ZjYwNTQyIiwidXNlcl9pZCI6MX0.1CskbcnjVLtRaoc3cvjaUEAsWEufzD7JZ8dQphyocbg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\": \"Super Admin\", \"is_active\": false}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/auth/roles/4/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"roles",
+								"4",
 								""
 							]
 						}

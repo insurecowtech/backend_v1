@@ -291,7 +291,10 @@ from .models import (
     User, UserPersonalInfo, UserFinancialInfo, UserNomineeInfo,
     OrganizationInfo, InsuranceCompany
 )
-
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name',]
 
 class UserPersonalInfoSerializer(serializers.ModelSerializer):
     class Meta:

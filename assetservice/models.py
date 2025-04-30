@@ -69,7 +69,7 @@ class Asset(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.asset_type.name if self.asset_type else 'Unknown Type'} - {self.owner.name}"
+        return f"{self.asset_type.name if self.asset_type else 'Unknown Type'} - {self.owner.mobile_number}"
 
 class AssetHistory(models.Model):
     asset = models.ForeignKey("Asset", on_delete=models.CASCADE, related_name="history_records")

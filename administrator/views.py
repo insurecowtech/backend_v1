@@ -4,8 +4,9 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
-from rest_framework import status, permissions
+from rest_framework import status, permissions, serializers
 
+from Insurecow.utils import success_response, handle_serializer_error, validation_error_from_serializer
 from authservice.models import User
 from authservice.serializers import UserSerializer
 
@@ -16,9 +17,12 @@ class CreateUserByAdminView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User created successfully", "user_id": user.id}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                user = serializer.save()
+                return success_response("User created successfully",data={"user_id": user.id},status_code=status.HTTP_201_CREATED)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
 
 
 
@@ -38,9 +42,12 @@ class SetManagedByView(APIView):
 
         serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                serializer.save()
+                return success_response("User's data updated successfully", data=serializer.data, status_code=status.HTTP_201_CREATED)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
 
 
 class UserListView(APIView):
@@ -49,4 +56,10 @@ class UserListView(APIView):
     def get(self, request, *args, **kwargs):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        if serializer.is_valid():
+            try:
+                return success_response("User List Retrieved successfully", data=serializer.data,
+                                        status_code=status.HTTP_200_OK)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)

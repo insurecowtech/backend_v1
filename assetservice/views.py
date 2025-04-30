@@ -1,12 +1,10 @@
+from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework.views import APIView
 
+from Insurecow.utils import success_response, handle_serializer_error, validation_error_from_serializer
 from authservice.models import User
-from .models import Asset, AssetHistory
-from .serializers import AssetSerializer
 
 
 class AssetCreateAPIView(APIView):
@@ -15,21 +13,25 @@ class AssetCreateAPIView(APIView):
     def post(self, request):
         serializer = AssetSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            asset = serializer.save()
+            try:
+                asset = serializer.save()
+                AssetHistory.objects.create(
+                    asset=asset,
+                    changed_by=request.user,
+                    weight_kg=asset.weight_kg,
+                    vaccination_status=asset.vaccination_status,
+                    deworming_status=asset.deworming_status,
+                    remarks="Initial asset creation"
+                )
 
-            # Create initial asset history
-            AssetHistory.objects.create(
-                asset=asset,
-                changed_by=request.user,
-                weight_kg=asset.weight_kg,
-                vaccination_status=asset.vaccination_status,
-                deworming_status=asset.deworming_status,
-                remarks="Initial asset creation"
-            )
+                return success_response("Asset Created successfully.",
+                                        data=AssetSerializer(asset, context={'request': request}).data,
+                                        status_code=status.HTTP_201_CREATED)
 
-            return Response(AssetSerializer(asset, context={'request': request}).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
 
+        return validation_error_from_serializer(serializer)
 
 
 class AssetListAPIView(APIView):
@@ -38,7 +40,14 @@ class AssetListAPIView(APIView):
     def get(self, request):
         assets = Asset.objects.filter(owner=request.user)
         serializer = AssetSerializer(assets, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            try:
+                return success_response("Asset List Retrieved successfully", data=serializer.data,
+                                        status_code=status.HTTP_200_OK)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
+
 
 class AssetDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -49,20 +58,28 @@ class AssetDetailAPIView(APIView):
     def get(self, request, pk):
         asset = self.get_object(pk, request.user)
         serializer = AssetSerializer(asset)
-        return Response(serializer.data)
+        if serializer.is_valid():
+            try:
+                return success_response("Asset Details Retrieved successfully", data=serializer.data)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
 
     def put(self, request, pk):
         asset = self.get_object(pk, request.user)
         serializer = AssetSerializer(asset, data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                serializer.save()
+                return success_response("Asset Details Updated successfully", data=serializer.data)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
 
     def delete(self, request, pk):
         asset = self.get_object(pk, request.user)
         asset.delete()
-        return Response({"detail": "Deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return success_response("Deleted successfully.", status_code=status.HTTP_204_NO_CONTENT)
 
 
 from rest_framework import status
@@ -75,12 +92,8 @@ from rest_framework.permissions import BasePermission
 
 
 class IsAllowedToCreateAsset(BasePermission):
-    """
-    Custom permission to allow asset creation only for staff, superuser, or users with role 2.
-    """
 
     def has_permission(self, request, view):
-        # Check if the user is authenticated and has the correct role
         if request.user.is_staff or request.user.is_superuser:
             return True
         if hasattr(request.user, 'role') and request.user.role == 2:
@@ -96,30 +109,29 @@ class AssetCreateOnBehalfAPIView(APIView):
         if not user_id:
             return Response({"detail": "User ID must be provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure the user exists
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Ensure the user is allowed to create assets on their behalf
-        # Here we can add additional checks if necessary, e.g., user roles, etc.
 
         serializer = AssetSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            # Manually set the owner to the specified user
-            asset = serializer.save(owner=user, created_by=request.user, updated_by=request.user)
+            try:
+                asset = serializer.save(owner=user, created_by=request.user, updated_by=request.user)
+                AssetHistory.objects.create(
+                    asset=asset,
+                    changed_by=request.user,
+                    weight_kg=asset.weight_kg,
+                    vaccination_status=asset.vaccination_status,
+                    deworming_status=asset.deworming_status,
+                    remarks="Initial asset creation on behalf of user"
+                )
 
-            # Manually create initial asset history
-            AssetHistory.objects.create(
-                asset=asset,
-                changed_by=request.user,
-                weight_kg=asset.weight_kg,
-                vaccination_status=asset.vaccination_status,
-                deworming_status=asset.deworming_status,
-                remarks="Initial asset creation on behalf of user"
-            )
+                return success_response("Asset Created successfully.",
+                                        data=AssetSerializer(asset).data,
+                                        status_code=status.HTTP_201_CREATED)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
 
-            return Response(AssetSerializer(asset).data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return validation_error_from_serializer(serializer)

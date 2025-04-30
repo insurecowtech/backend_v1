@@ -53,11 +53,15 @@ class UserManager(BaseUserManager):
     def create_superuser(self, mobile_number, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("role", None)
+        extra_fields.setdefault("managed_by", None)
+        extra_fields.setdefault("onboarded_by", None)
         return self.create_user(mobile_number, password, **extra_fields)
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     mobile_number = models.CharField(max_length=15, unique=True)
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
     managed_by = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -94,11 +98,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         ]
 
     def clean(self):
-        # Validate manager role
+        if self.is_superuser:
+            return  # Skip validation for superusers
+
         if self.managed_by and self.managed_by.role_id != 2:
             raise ValidationError("The manager must have role_id = 2.")
 
-        # Validate onboarder is staff or superuser
         if self.onboarded_by and not (self.onboarded_by.is_staff or self.onboarded_by.is_superuser):
             raise ValidationError("Onboarded_by must be a staff or superuser.")
 

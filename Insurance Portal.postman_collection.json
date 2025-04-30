@@ -1,0 +1,967 @@
+{
+	"info": {
+		"_postman_id": "c6a91bfc-edfa-4712-a1bb-12a17a447d27",
+		"name": "Insurance Portal",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30833898"
+	},
+	"item": [
+		{
+			"name": "Registration",
+			"item": [
+				{
+					"name": "Step 01",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mobile_number\": \"01728096103\",\n    \"role_id\": 3\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/auth/register/step1/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register",
+								"step1",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 02: OTP verify",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mobile_number\": \"01728096103\",\n    \"otp\": \"832218\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/auth/register/verify-otp/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register",
+								"verify-otp",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 03: Set Pass",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mobile_number\": \"01728096103\",\n    \"password\": \"your_secure_password\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/auth/register/set-password/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register",
+								"set-password",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mobile_number\": \"01728096101\",\n    \"password\": \"your_secure_password\"\n}\n\n// {\n//     \"mobile_number\": \"01728096198\",\n//     \"password\": \"106219\"\n// }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/auth/login/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Asset",
+			"item": [
+				{
+					"name": "Add New Asset",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MDAxNjM2LCJpYXQiOjE3NDU5OTgwMzYsImp0aSI6IjIxYjNlYzlhMjg0MjRjZmU5YTYyM2E1YzU4ZGFkNjg5IiwidXNlcl9pZCI6Mn0.3LSUGcvQy8VSuhz7KDQXejybTsMTTCAirmdMqhONAew"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "asset_type",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "breed",
+									"value": "Deshi",
+									"type": "text"
+								},
+								{
+									"key": "age_in_months",
+									"value": "12",
+									"type": "text"
+								},
+								{
+									"key": "color",
+									"value": "Brown",
+									"type": "text"
+								},
+								{
+									"key": "weight_kg",
+									"value": "250.5",
+									"type": "text"
+								},
+								{
+									"key": "vaccination_status",
+									"value": "vaccinated",
+									"type": "text"
+								},
+								{
+									"key": "last_vaccination_date",
+									"value": "2025-04-01",
+									"type": "text"
+								},
+								{
+									"key": "deworming_status",
+									"value": "dewormed",
+									"type": "text"
+								},
+								{
+									"key": "last_deworming_date",
+									"value": "2025-04-10",
+									"type": "text"
+								},
+								{
+									"key": "special_mark",
+									"value": "White patch on head",
+									"type": "text"
+								},
+								{
+									"key": "health_issues",
+									"value": "None",
+									"type": "text"
+								},
+								{
+									"key": "remarks",
+									"value": "Healthy and ready for sale",
+									"type": "text"
+								},
+								{
+									"key": "muzzle_video",
+									"type": "file",
+									"src": "/path/to/muzzle_video.mp4"
+								},
+								{
+									"key": "left_side_image",
+									"type": "file",
+									"src": "/path/to/left_image.jpg"
+								},
+								{
+									"key": "right_side_image",
+									"type": "file",
+									"src": "/path/to/right_image.jpg"
+								},
+								{
+									"key": "challan_paper",
+									"type": "file",
+									"src": "/path/to/challan.pdf"
+								},
+								{
+									"key": "vet_certificate",
+									"type": "file",
+									"src": "/path/to/vet_certificate.pdf"
+								},
+								{
+									"key": "chairman_certificate",
+									"type": "file",
+									"src": "/path/to/chairman_certificate.pdf"
+								},
+								{
+									"key": "asset_id_from",
+									"value": "5165441641",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/asset/assets/create/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"asset",
+								"assets",
+								"create",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "All asset",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk1NzAyLCJpYXQiOjE3NDU5OTIxMDIsImp0aSI6ImFmMWMzNDE2OTg1ODQwOWY5MzZhZTA1ZjBjNjVhNjdiIiwidXNlcl9pZCI6Mn0._lQsSHj_kzlzGC1K-uHXOCBsKd7tE2DFcspSWxJxp1w"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/asset/assets/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"asset",
+								"assets",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Asset details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk1NzAyLCJpYXQiOjE3NDU5OTIxMDIsImp0aSI6ImFmMWMzNDE2OTg1ODQwOWY5MzZhZTA1ZjBjNjVhNjdiIiwidXNlcl9pZCI6Mn0._lQsSHj_kzlzGC1K-uHXOCBsKd7tE2DFcspSWxJxp1w"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/asset/assets/12/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"asset",
+								"assets",
+								"12",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create-on-behalf",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk0ODk4LCJpYXQiOjE3NDU5OTEyOTgsImp0aSI6IjMzOWZkZTQwMzBhZDQ0ZDZiZDljMzYyMTU1NTJmNmM3IiwidXNlcl9pZCI6MX0.6EUotV3MeKEirO2vlP2xMQrjbEbrdh5OcSQyu2knlgA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"asset_type\": 1,\n    \"breed\": \"Deshi\",\n    \"age_in_months\": 12,\n    \"color\": \"Brown\",\n    \"weight_kg\": 250.5,\n    \"vaccination_status\": \"vaccinated\",\n    \"last_vaccination_date\": \"2025-04-01\",\n    \"deworming_status\": \"dewormed\",\n    \"last_deworming_date\": \"2025-04-10\",\n    \"special_mark\": \"White patch on head\",\n    \"health_issues\": \"None\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/asset/assets/create-on-behalf/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"asset",
+								"assets",
+								"create-on-behalf",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "insurance service",
+			"item": [
+				{
+					"name": "Insurancce List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk0ODk4LCJpYXQiOjE3NDU5OTEyOTgsImp0aSI6IjMzOWZkZTQwMzBhZDQ0ZDZiZDljMzYyMTU1NTJmNmM3IiwidXNlcl9pZCI6MX0.6EUotV3MeKEirO2vlP2xMQrjbEbrdh5OcSQyu2knlgA"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/insurance/insurance-product/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"insurance",
+								"insurance-product",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "apply asset insurance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MDA2MzY5LCJpYXQiOjE3NDYwMDI3NjksImp0aSI6Ijg4NDAyZWE3MWFhNjQxNTk5MTg4ZDNmYTc1ZmYyYjUxIiwidXNlcl9pZCI6Mn0.w_dwGzDjsGhG_mqZQP9dLdkYqcWLqruuoX5-pBVkAx0"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"asset\": 1,\n    \"insurance_number\": \"INS-12347\",\n    \"sum_insured\": 10000.00,\n    \"insurance_start_date\": \"2025-05-01\",\n    \"insurance_end_date\": \"2026-05-01\",\n    \"insurance_provider\": 1\n  },\n  {\n    \"asset\": 2,\n    \"insurance_number\": \"INS-678918\",\n    \"sum_insured\": 20000.00,\n    \"insurance_start_date\": \"2025-05-01\",\n    \"insurance_end_date\": \"2026-05-01\",\n    \"insurance_provider\": 1\n  }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/insurance/insurance-apply/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"insurance",
+								"insurance-apply",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "claim insurance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk3NDI2LCJpYXQiOjE3NDU5OTM4MjYsImp0aSI6ImZiOGQzN2E5NjE4ZjQxYjJiMTdmZjc3YTgzZTYxYzE5IiwidXNlcl9pZCI6M30.M4Rx38ALqtgEWs4HZxpNTvmH0Dpo4zFyP6NQPEQMlDc"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "asset_insurance",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "reason",
+									"value": "Damage to the asset",
+									"type": "text"
+								},
+								{
+									"key": "claim_status",
+									"value": "pending",
+									"type": "text"
+								},
+								{
+									"key": "claim_documents",
+									"type": "file",
+									"src": "/C:/Users/shafiqul.islam/Downloads/Documents/jul182022brpd16.pdf"
+								},
+								{
+									"key": "rejection_reason",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "processed_date",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "settlement_documents",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "remarks",
+									"value": "Initial claim submission",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/insurance/insurance-claim/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"insurance",
+								"insurance-claim",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Token verify",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NjY1NjY0LCJpYXQiOjE3NDU2NjIwNjQsImp0aSI6Ijg0YjIxYTVhZDA0MjQwOTdhM2I4YWUxNjYzZTlkNjUzIiwidXNlcl9pZCI6Mn0.Mpo2QexleGknhv49LddF2iJ25SjVKlqYqytYsH2j9Po\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v1/auth/token/verify/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"token",
+						"verify",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Personal Info",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NjY1NjY0LCJpYXQiOjE3NDU2NjIwNjQsImp0aSI6Ijg0YjIxYTVhZDA0MjQwOTdhM2I4YWUxNjYzZTlkNjUzIiwidXNlcl9pZCI6Mn0.Mpo2QexleGknhv49LddF2iJ25SjVKlqYqytYsH2j9Po"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "profile_image",
+							"type": "file",
+							"src": "/C:/Users/shafiqul.islam/Downloads/Add a heading.png"
+						},
+						{
+							"key": "first_name",
+							"value": "John",
+							"type": "text"
+						},
+						{
+							"key": "last_name",
+							"value": "Doe",
+							"type": "text"
+						},
+						{
+							"key": "nid",
+							"value": "123456789",
+							"type": "text"
+						},
+						{
+							"key": "date_of_birth",
+							"value": "2000-01-01",
+							"type": "text"
+						},
+						{
+							"key": "gender",
+							"value": "male",
+							"type": "text"
+						},
+						{
+							"key": "tin",
+							"value": "TIN12345",
+							"type": "text"
+						},
+						{
+							"key": "bin",
+							"value": "BIN67890",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/auth/personal-info/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"personal-info",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Organization Info",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NzI4MjUxLCJpYXQiOjE3NDU3MjQ2NTEsImp0aSI6IjdkNmIxYWIyMTY2YTQxYzhhYzg1NTRiM2U3MzJlNTY4IiwidXNlcl9pZCI6NH0.tJ6d0JfdJ2SLJzyVwl9f3x9Kd2rw0oy7IVbyQFSX3Tg"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "logo",
+							"type": "file",
+							"src": "/C:/Users/shafiqul.islam/Downloads/Add a heading.png"
+						},
+						{
+							"key": "name",
+							"value": "John",
+							"type": "text"
+						},
+						{
+							"key": "established",
+							"value": "2000-01-01",
+							"type": "text"
+						},
+						{
+							"key": "tin",
+							"value": "TIN12345",
+							"type": "text"
+						},
+						{
+							"key": "bin",
+							"value": "BIN67890",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v1/auth/organization-info/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"organization-info",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Financial Info",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NjY1NjY0LCJpYXQiOjE3NDU2NjIwNjQsImp0aSI6Ijg0YjIxYTVhZDA0MjQwOTdhM2I4YWUxNjYzZTlkNjUzIiwidXNlcl9pZCI6Mn0.Mpo2QexleGknhv49LddF2iJ25SjVKlqYqytYsH2j9Po"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"bank_name\": \"John\",\n    \"branch_name\": \"Doe\",\n    \"account_name\": \"John Doe\",\n    \"account_number\": \"123456789\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/auth/financial-info/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"financial-info",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Nominee Info",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NjY1NjY0LCJpYXQiOjE3NDU2NjIwNjQsImp0aSI6Ijg0YjIxYTVhZDA0MjQwOTdhM2I4YWUxNjYzZTlkNjUzIiwidXNlcl9pZCI6Mn0.Mpo2QexleGknhv49LddF2iJ25SjVKlqYqytYsH2j9Po"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nominee_name\": \"John\",\n    \"phone\": \"Doe\",\n    \"email\": \"JohnDoe@gmail.com\",\n    \"nid\": \"123456789\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/auth/nominee-info/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"nominee-info",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "R from admin",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTg5NDU0LCJpYXQiOjE3NDU5ODU4NTQsImp0aSI6ImU2Y2UwNDYzN2RlOTQ4NmFhOWJjODhhZTk0ZGY4NDRkIiwidXNlcl9pZCI6MX0.olzC0IVp484RvcxEtIRNVYmUWH3PM95mZHbYqW2Qauk"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"mobile_number\": \"01700000005\",\n    \"password\": \"your_secure_password\",\n    \"role\": 1,\n    \"personal_info\": {\n      \"first_name\": \"John\",\n      \"last_name\": \"Doe\",\n      \"nid\": \"1234567890\",\n      \"date_of_birth\": \"1990-01-01\",\n      \"gender\": \"male\",\n      \"tin\": \"TIN123456\"\n    },\n    \"financial_info\": {\n      \"bank_name\": \"Dutch-Bangla Bank\",\n      \"branch_name\": \"Dhanmondi\",\n      \"account_name\": \"John Doe\",\n      \"account_number\": \"0123456789\"\n    },\n    \"nominee_info\": {\n      \"nominee_name\": \"Jane Doe\",\n      \"phone\": \"01800000000\",\n      \"email\": \"jane@example.com\",\n      \"nid\": \"9876543210\"\n    },\n    \"organization_info\": {\n      \"name\": \"Acme Ltd\",\n      \"established\": \"2005-04-01\",\n      \"tin\": \"TIN987654\",\n      \"bin\": \"BIN567890\"\n    }\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/administrator/create-user/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"administrator",
+						"create-user",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "set-managed-by",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk0ODk4LCJpYXQiOjE3NDU5OTEyOTgsImp0aSI6IjMzOWZkZTQwMzBhZDQ0ZDZiZDljMzYyMTU1NTJmNmM3IiwidXNlcl9pZCI6MX0.6EUotV3MeKEirO2vlP2xMQrjbEbrdh5OcSQyu2knlgA"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"managed_by\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/administrator/users/10/set-managed-by/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"administrator",
+						"users",
+						"10",
+						"set-managed-by",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "User List",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1OTk0ODk4LCJpYXQiOjE3NDU5OTEyOTgsImp0aSI6IjMzOWZkZTQwMzBhZDQ0ZDZiZDljMzYyMTU1NTJmNmM3IiwidXNlcl9pZCI6MX0.6EUotV3MeKEirO2vlP2xMQrjbEbrdh5OcSQyu2knlgA"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/administrator/users/list/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"administrator",
+						"users",
+						"list",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

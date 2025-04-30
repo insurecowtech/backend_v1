@@ -70,12 +70,16 @@ class AssetInsuranceCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = AssetInsuranceSerializer(data=request.data)
+        is_many = isinstance(request.data, list)
+        serializer = AssetInsuranceSerializer(data=request.data, many=is_many, context={'request': request})
+
         if serializer.is_valid():
             try:
                 serializer.save(created_by=request.user)
-                return success_response("Asset Insurance Created successfully.", status_code=status.HTTP_201_CREATED)
-
+                return success_response(
+                    "Asset Insurance(s) created successfully.",data=serializer.data,
+                    status_code=status.HTTP_201_CREATED
+                )
             except serializers.ValidationError as e:
                 return handle_serializer_error(e)
 

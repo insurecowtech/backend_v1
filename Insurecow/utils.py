@@ -62,14 +62,23 @@ def handle_serializer_error(e: ValidationError):
     return error_response(str(message), status_code=status.HTTP_400_BAD_REQUEST)
 
 def validation_error_from_serializer(serializer):
-    # Get the first error message
     error_messages = []
-    for field, errors in serializer.errors.items():
-        if isinstance(errors, list):
-            for error in errors:
-                error_messages.append(f"{field}: {error}")
-        else:
-            error_messages.append(f"{field}: {errors}")
+
+    if isinstance(serializer.errors, list):  # Bulk (many=True)
+        for idx, error_dict in enumerate(serializer.errors):
+            for field, errors in error_dict.items():
+                if isinstance(errors, list):
+                    for error in errors:
+                        error_messages.append(f"Item {idx + 1} - {field}: {error}")
+                else:
+                    error_messages.append(f"Item {idx + 1} - {field}: {errors}")
+    else:  # Single object
+        for field, errors in serializer.errors.items():
+            if isinstance(errors, list):
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            else:
+                error_messages.append(f"{field}: {errors}")
 
     first_error_message = error_messages[0] if error_messages else "Invalid input."
 
@@ -81,7 +90,6 @@ def validation_error_from_serializer(serializer):
             "message": first_error_message
         }
     }, status=status.HTTP_400_BAD_REQUEST)
-
 from decimal import Decimal
 from datetime import date, datetime
 

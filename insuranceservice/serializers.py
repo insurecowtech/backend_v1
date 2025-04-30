@@ -53,7 +53,21 @@ class AssetInsuranceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetInsurance
         fields = '__all__'
-        read_only_fields = ['created_by', 'updated_by']
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+        }
+
+    def create(self, validated_data):
+        created_by = self.context['request'].user
+        if isinstance(validated_data, list):
+            for item in validated_data:
+                item['created_by'] = created_by
+            return AssetInsurance.objects.bulk_create([
+                AssetInsurance(**item) for item in validated_data
+            ])
+        validated_data['created_by'] = created_by
+        return super().create(validated_data)
+
 
 
 class InsuranceClaimSerializer(serializers.ModelSerializer):

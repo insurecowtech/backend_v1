@@ -136,7 +136,7 @@ class InsuranceClaim(models.Model):
     asset_insurance = models.ForeignKey(AssetInsurance, on_delete=models.CASCADE, related_name="claims")
     claim_date = models.DateField(auto_now_add=True)
     reason = models.TextField()
-    amount_claimed = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_claimed = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     amount_approved = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     claim_status = models.CharField(max_length=20, choices=ClaimStatus.choices, default=ClaimStatus.PENDING)
 

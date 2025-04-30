@@ -64,6 +64,7 @@ class Asset(models.Model):
 
     is_active = models.BooleanField(default=True)
     remarks = models.TextField(blank=True, null=True)
+    asset_id_from = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']

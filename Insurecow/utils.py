@@ -82,3 +82,29 @@ def validation_error_from_serializer(serializer):
         }
     }, status=status.HTTP_400_BAD_REQUEST)
 
+from decimal import Decimal
+from datetime import date, datetime
+
+from django.db.models.fields.files import FieldFile
+from decimal import Decimal
+from datetime import date, datetime
+
+def convert_non_serializable_fields(data):
+    for key, value in data.items():
+        if isinstance(value, Decimal):
+            data[key] = float(value)
+        elif isinstance(value, date):
+            data[key] = value.isoformat()  # Convert date to 'YYYY-MM-DD' string
+        elif isinstance(value, datetime):
+            data[key] = value.isoformat()  # Convert datetime to 'YYYY-MM-DDTHH:MM:SS' string
+        elif isinstance(value, FieldFile):
+            data[key] = value.url if value else None  # Get URL of the file if it exists
+        elif isinstance(value, dict):
+            convert_non_serializable_fields(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    convert_non_serializable_fields(item)
+    return data
+
+

@@ -6,6 +6,7 @@ from rest_framework import status
 from .models import InsuranceCompany, InsuranceType, InsurancePeriod, PremiumPercentage
 
 class CompanyWiseInsuranceAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         companies = InsuranceCompany.objects.all()
         data = []

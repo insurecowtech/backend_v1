@@ -70,3 +70,26 @@ class Asset(models.Model):
 
     def __str__(self):
         return f"{self.asset_type.name if self.asset_type else 'Unknown Type'} - {self.owner.name}"
+
+class AssetHistory(models.Model):
+    asset = models.ForeignKey("Asset", on_delete=models.CASCADE, related_name="history_records")
+
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="asset_change_logs"
+    )
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    vaccination_status = models.CharField(max_length=20, blank=True, null=True)
+    deworming_status = models.CharField(max_length=20, blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)  # Optional comments on the change
+
+    class Meta:
+        ordering = ['-changed_at']
+
+    def __str__(self):
+        return f"Change for Asset ID {self.asset.id} at {self.changed_at}"

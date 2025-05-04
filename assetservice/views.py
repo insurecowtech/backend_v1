@@ -34,11 +34,11 @@ class AssetCreateAPIView(APIView):
         return validation_error_from_serializer(serializer)
 
 
-class AssetListAPIView(APIView):
+class AssetTypeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        assets = Asset.objects.filter(owner=request.user)
+        assets = AssetType.objects.filter()
         serializer = AssetSerializer(assets, many=True)
         if serializer.is_valid():
             try:
@@ -47,6 +47,53 @@ class AssetListAPIView(APIView):
             except serializers.ValidationError as e:
                 return handle_serializer_error(e)
         return validation_error_from_serializer(serializer)
+
+class AssetTypeDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, user):
+        return get_object_or_404(Asset, pk=pk, owner=user)
+
+    def get(self, request, pk):
+        asset = self.get_object(pk, request.user)
+        serializer = AssetSerializer(asset)
+        if serializer.is_valid():
+            try:
+                return success_response("Asset Details Retrieved successfully", data=serializer.data)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
+
+    def put(self, request, pk):
+        asset = self.get_object(pk, request.user)
+        serializer = AssetSerializer(asset, data=request.data, context={'request': request})
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return success_response("Asset Details Updated successfully", data=serializer.data)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
+        return validation_error_from_serializer(serializer)
+
+    def delete(self, request, pk):
+        asset = self.get_object(pk, request.user)
+        asset.delete()
+        return success_response("Deleted successfully.", status_code=status.HTTP_204_NO_CONTENT)
+
+
+
+
+class AssetListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        assets = Asset.objects.filter(owner=request.user)
+        serializer = AssetSerializer(assets, many=True)
+        try:
+            return success_response("Asset List Retrieved successfully", data=serializer.data,
+                                    status_code=status.HTTP_200_OK)
+        except serializers.ValidationError as e:
+            return handle_serializer_error(e)
 
 
 class AssetDetailAPIView(APIView):
@@ -86,7 +133,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Asset, AssetHistory
+from .models import Asset, AssetHistory, AssetType
 from .serializers import AssetSerializer
 from rest_framework.permissions import BasePermission
 

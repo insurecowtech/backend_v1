@@ -1,11 +1,17 @@
 from decimal import Decimal
 from rest_framework import serializers
-from .models import Asset, AssetHistory
+from .models import Asset, AssetHistory, AssetType
 
 
 class AssetHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetHistory
+        fields = '__all__'
+
+
+class AssetTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetType
         fields = '__all__'
 
 

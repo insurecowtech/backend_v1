@@ -92,7 +92,8 @@ class Step1Serializer(serializers.Serializer):
             otp=otp_instance,
             is_verified=False
         )
-        print(f"OTP sent: {otp_code}")  # Replace with SMS sending
+        print(f"OTP sent: {otp_code}")
+        # Replace with SMS sending
         return temp_user
 
 class OTPVerifySerializer(serializers.Serializer):

@@ -3,16 +3,24 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, BasePermission
 from rest_framework import status, permissions, serializers
 
 from Insurecow.utils import success_response, handle_serializer_error, validation_error_from_serializer
 from authservice.models import User
 from authservice.serializers import UserSerializer
 
+class IsAllowedToCreateUser(BasePermission):
+
+    def has_permission(self, request, view):
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+        if hasattr(request.user, 'role') and request.user.role == 2:
+            return True
+        return False
 
 class CreateUserByAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser,IsAllowedToCreateUser]
 
     def post(self, request):
         serializer = UserSerializer(data=request.data, context={'request': request})

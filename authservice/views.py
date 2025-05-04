@@ -61,15 +61,11 @@ class RoleRetrieveUpdateDestroyAPIView(APIView):
         role = self.get_object(pk)
         if role is not None:
             serializer = RoleSerializer(role)
-            if serializer.is_valid():
-                try:
-                    serializer.save()
-                    return success_response("Roles Retrieved successfully.", data=serializer.data, status_code=status.HTTP_201_CREATED)
+            try:
+                return success_response("Roles Retrieved successfully.", data=serializer.data, status_code=status.HTTP_201_CREATED)
 
-                except serializers.ValidationError as e:
-                    return handle_serializer_error(e)
-
-            return validation_error_from_serializer(serializer)
+            except serializers.ValidationError as e:
+                return handle_serializer_error(e)
         return error_response("Role not found", status_code=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, pk):

@@ -56,10 +56,8 @@ class UserListView(APIView):
     def get(self, request, *args, **kwargs):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        if serializer.is_valid():
-            try:
-                return success_response("User List Retrieved successfully", data=serializer.data,
-                                        status_code=status.HTTP_200_OK)
-            except serializers.ValidationError as e:
-                return handle_serializer_error(e)
-        return validation_error_from_serializer(serializer)
+        try:
+            return success_response("User List Retrieved successfully", data=serializer.data,
+                                    status_code=status.HTTP_200_OK)
+        except serializers.ValidationError as e:
+            return handle_serializer_error(e)

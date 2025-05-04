@@ -105,12 +105,10 @@ class AssetDetailAPIView(APIView):
     def get(self, request, pk):
         asset = self.get_object(pk, request.user)
         serializer = AssetSerializer(asset)
-        if serializer.is_valid():
-            try:
-                return success_response("Asset Details Retrieved successfully", data=serializer.data)
-            except serializers.ValidationError as e:
-                return handle_serializer_error(e)
-        return validation_error_from_serializer(serializer)
+        try:
+            return success_response("Asset Details Retrieved successfully", data=serializer.data)
+        except serializers.ValidationError as e:
+            return handle_serializer_error(e)
 
     def put(self, request, pk):
         asset = self.get_object(pk, request.user)

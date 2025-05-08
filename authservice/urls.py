@@ -3,18 +3,23 @@ from .views import *
 
 app_name = 'core'
 urlpatterns = [
-    path('register/step1/', RegisterStep1.as_view(), name='register-step1'),
-    path('register/verify-otp/', VerifyOTP.as_view(), name='verify-otp'),
-    path('register/set-password/', SetPassword.as_view(), name='set-password'),
-    path('login/', Login.as_view(), name='login'),
-    path('personal-info/', SetPersonalInfo.as_view(), name='personal-info'),
-    path('financial-info/', SetFinancialInfo.as_view(), name='financial-info'),
-    path('nominee-info/', SetNomineeInfo.as_view(), name='nominee-info'),
-    path('organization-info/', SetOrganizationInfo.as_view(), name='organization-info'),
-    path('token/verify/', VerifyTokenView.as_view(), name='verify-token'),
+    path('public/register/step1/', RegisterStep1.as_view(), name='register-step1'),
+    path('public/register/verify-otp/', VerifyOTP.as_view(), name='verify-otp'),
+    path('public/register/set-password/', SetPassword.as_view(), name='set-password'),
+    path('public/login/', Login.as_view(), name='login'),
 
-    path('roles/', RoleListCreateAPIView.as_view(), name='role-list-create'),
-    path('roles/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role-detail'),
+    path('user/personal-info/', SetPersonalInfo.as_view(), name='personal-info'),
+    path('user/financial-info/', SetFinancialInfo.as_view(), name='financial-info'),
+    path('user/nominee-info/', SetNomineeInfo.as_view(), name='nominee-info'),
+    path('user/organization-info/', SetOrganizationInfo.as_view(), name='organization-info'),
 
-    path('users/sub-users/', SubUsersAPIView.as_view(), name='sub-users'),
+    path('public/token/verify/', VerifyTokenView.as_view(), name='verify-token'),
+
+    path('public/role-list/', RoleListAPIView.as_view(), name='role-list'),
+    path('admin/role/', RoleListCreateAPIView.as_view(), name='role-list-create'),
+    path('admin/role/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role-detail'),
+
+    path('user/sub-users/', SubUsersAPIView.as_view(), name='sub-users'),
+
+    path('user/change-password/', ChangePasswordAPIView.as_view(), name='change-password'),
 ]

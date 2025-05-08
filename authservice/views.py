@@ -1,4 +1,5 @@
 # views.py
+from pyexpat.errors import messages
 from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,10 +8,10 @@ import jwt
 from django.conf import settings
 
 from administrator.views import IsSuperUser
-from .models import UserNomineeInfo, UserFinancialInfo, UserPersonalInfo
+from .models import UserNomineeInfo, UserFinancialInfo, UserPersonalInfo, OrganizationInfo
 from .serializers import Step1Serializer, OTPVerifySerializer, SetPasswordSerializer, LoginSerializer, \
     SetPersonalInfoSerializer, SetFinancialInfoSerializer, SetNomineeInfoSerializer, SetOrganizationInfoSerializer, \
-    SubUserSerializer
+    SubUserSerializer, ChangePasswordSerializer
 from Insurecow.utils import handle_serializer_error, success_response, validation_error_from_serializer, error_response
 
 from rest_framework import status
@@ -18,12 +19,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Role
 from .serializers import RoleSerializer
-from rest_framework.permissions import IsAuthenticated  # Optional: Add authentication if needed
+from rest_framework.permissions import IsAuthenticated
 
-
-class RoleListCreateAPIView(APIView):
-    permission_classes = [AllowAny]  # Optional: Add permission classes as needed
-
+class RoleListAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         roles = Role.objects.all()
         serializer = RoleSerializer(roles, many=True)
@@ -33,7 +32,8 @@ class RoleListCreateAPIView(APIView):
         except serializers.ValidationError as e:
             return handle_serializer_error(e)
 
-
+class RoleListCreateAPIView(APIView):
+    permission_classes = [IsSuperUser]
     def post(self, request):
         serializer = RoleSerializer(data=request.data)
         if serializer.is_valid():
@@ -49,7 +49,7 @@ class RoleListCreateAPIView(APIView):
 
 
 class RoleRetrieveUpdateDestroyAPIView(APIView):
-    permission_classes = [IsSuperUser]  # Optional: Add permission classes as needed
+    permission_classes = [IsSuperUser]
 
     def get_object(self, pk):
         try:
@@ -181,27 +181,40 @@ class SetOrganizationInfo(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = SetOrganizationInfoSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            try:
-                serializer.save()
-                return success_response("User's Organization Info Saved Successfully.")
-            except serializers.ValidationError as e:
-                return handle_serializer_error(e)
-
-        return validation_error_from_serializer(serializer)
-
-    def get(self, request):
-        try:
-            personal_info = UserPersonalInfo.objects.get(user=request.user)
-            serializer = SetPersonalInfoSerializer(personal_info)
-            return success_response(data=serializer.data)
-        except UserNomineeInfo.DoesNotExist:
+        if request.user.role.id == 1:
+            messages = 'Organization info is not needed for this user.'
             return Response({
                 "statusCode": "404",
                 "statusMessage": "Not Found",
                 "data": {
-                    "message": "Personal info not found for this user."
+                    "message": f'{messages}'
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
+        else:
+            serializer = SetOrganizationInfoSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                try:
+                    serializer.save()
+                    return success_response("User's Organization Info Saved Successfully.")
+                except serializers.ValidationError as e:
+                    return handle_serializer_error(e)
+
+            return validation_error_from_serializer(serializer)
+
+    def get(self, request):
+        try:
+            organization_info = OrganizationInfo.objects.get(user=request.user)
+            serializer = SetOrganizationInfoSerializer(organization_info)
+            return success_response(data=serializer.data)
+        except OrganizationInfo.DoesNotExist:
+            messages = 'Organization info not found for this user.'
+            if request.user.role.id == 1:
+                messages = 'Organization info is not needed for this user.'
+            return Response({
+                "statusCode": "404",
+                "statusMessage": "Not Found",
+                "data": {
+                    "message": f'{messages}'
                 }
             }, status=status.HTTP_404_NOT_FOUND)
 
@@ -213,7 +226,7 @@ class SetFinancialInfo(APIView):
         if serializer.is_valid():
             try:
                 serializer.save()
-                return success_response("User's Personal Info Saved Successfully.")
+                return success_response("User's Financial Info Saved Successfully.")
             except serializers.ValidationError as e:
                 return handle_serializer_error(e)
         return validation_error_from_serializer(serializer)
@@ -240,9 +253,18 @@ class SetNomineeInfo(APIView):
         if serializer.is_valid():
             try:
                 serializer.save()
-                return success_response("User's Personal Info Saved Successfully.")
+                return success_response("User's Nominee Info Saved Successfully.")
             except serializers.ValidationError as e:
                 return handle_serializer_error(e)
+            except Exception as e:
+                return Response({
+                    "statusCode": "500",
+                    "statusMessage": "Internal Server Error",
+                    "data": {
+                        "message": str(e)
+                    }
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         return validation_error_from_serializer(serializer)
 
     def get(self, request):
@@ -295,3 +317,22 @@ class SubUsersAPIView(APIView):
         sub_users = current_user.sub_users.all()
         serializer = SubUserSerializer(sub_users, many=True)
         return success_response("User List retrieved successfully.", data=serializer.data)
+
+class ChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]  # Only authenticated users can change their password.
+
+    def post(self, request):
+        # Get the serializer with request data
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+
+        # Validate the serializer data
+        if serializer.is_valid():
+            user = request.user  # Get the currently logged-in user
+
+            # Set the new password
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()  # Save the user with the updated password
+
+            return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

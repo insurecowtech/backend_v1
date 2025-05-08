@@ -1,13 +1,16 @@
 import random
 
 from django.contrib.auth import authenticate
+from django.db import IntegrityError, DatabaseError
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
 from .models import TempUser, User, Role, OTPCategory, OTPRequestLog, OTPVerification, Token, UserPersonalInfo, \
     UserFinancialInfo, UserNomineeInfo, OrganizationInfo
 from django.utils.timezone import now
-from datetime import timedelta
+from datetime import timedelta, datetime
+
 
 def validate_mobile_number(value):
     if User.objects.filter(mobile_number=value).exists():
@@ -44,14 +47,24 @@ class LoginSerializer(serializers.Serializer):
 class Step1Serializer(serializers.Serializer):
     mobile_number = serializers.CharField()
     role_id = serializers.IntegerField()
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
 
     def create(self, validated_data):
         request = self.context.get('request')
         mobile_number = validated_data['mobile_number']
         role_id = validated_data['role_id']
+        latitude = validated_data['latitude']
+        longitude = validated_data['longitude']
+
         category = OTPCategory.REGISTRATION
-        validate_mobile_number(mobile_number)
-        validate_mobile_number(mobile_number)
+
+        # Validate mobile number
+        try:
+            validate_mobile_number(mobile_number)
+        except Exception as e:
+            raise serializers.ValidationError({"detail": f"Invalid mobile number: {str(e)}"})
+
         # Check OTP request limit
         if OTPRequestLog.request_limit_exceeded(mobile_number, category):
             raise serializers.ValidationError({"detail": "OTP request limit exceeded. Please try again later."})
@@ -59,42 +72,53 @@ class Step1Serializer(serializers.Serializer):
         otp_code = str(random.randint(100000, 999999))
 
         # Update or create TempUser
-        temp_user, created = TempUser.objects.update_or_create(
-            mobile_number=mobile_number,
-            defaults={
-                'role_id': role_id,
-                'otp': otp_code,
-                'is_verified': False
-            }
-        )
+        try:
+            temp_user, created = TempUser.objects.update_or_create(
+                mobile_number=mobile_number,
+                defaults={
+                    'role_id': role_id,
+                    'otp': otp_code,
+                    'is_verified': False,
+                    'latitude': latitude,
+                    'longitude': longitude,
+                }
+            )
 
-        # Reset count if older than 24 hours
-        if temp_user.updated_at < now() - timedelta(hours=24):
-            temp_user.otp_request_count = 1
-        else:
-            temp_user.otp_request_count += 1
-        temp_user.save()
+            # Update OTP request count
+            if created or (temp_user.updated_at < now() - timedelta(hours=24)):
+                temp_user.otp_request_count = 1
+            else:
+                temp_user.otp_request_count += 1
+            temp_user.save()
 
-        # Save OTP
-        ip = request.META.get('REMOTE_ADDR')
-        ua = request.META.get('HTTP_USER_AGENT')
+            # Save OTP and log request
+            ip = request.META.get('REMOTE_ADDR', 'Unknown IP')
+            ua = request.META.get('HTTP_USER_AGENT', 'Unknown User Agent')
 
-        # Save log
-        otp_instance = OTPRequestLog.objects.create(
-            mobile_number=mobile_number,
-            otp_code=otp_code,
-            category=category,
-            ip_address=ip,
-            user_agent=ua
-        )
+            otp_instance = OTPRequestLog.objects.create(
+                mobile_number=mobile_number,
+                otp_code=otp_code,
+                category=category,
+                ip_address=ip,
+                user_agent=ua
+            )
 
-        OTPVerification.objects.create(
-            otp=otp_instance,
-            is_verified=False
-        )
-        print(f"OTP sent: {otp_code}")
-        # Replace with SMS sending
-        return temp_user
+            OTPVerification.objects.create(
+                otp=otp_instance,
+                is_verified=False
+            )
+
+            # Replace print with proper logging or SMS sending
+            print(f"OTP sent: {otp_code}")
+            return temp_user
+
+        except IntegrityError as e:
+            raise serializers.ValidationError({"detail": f"Database integrity error: {str(e)}"})
+        except DatabaseError as e:
+            raise serializers.ValidationError({"detail": f"Database error: {str(e)}"})
+        except Exception as e:
+            raise serializers.ValidationError({"detail": f"Unexpected error: {str(e)}"})
+
 
 class OTPVerifySerializer(serializers.Serializer):
     mobile_number = serializers.CharField()
@@ -120,15 +144,16 @@ class OTPVerifySerializer(serializers.Serializer):
         if not otp_instance:
             raise serializers.ValidationError("OTP request not found.")
 
-        otp_instance2 = OTPVerification.objects.filter(
+        otp_instance2 = OTPVerification.objects.get(
             otp=otp_instance,
             is_verified=False
-        ).order_by('-created_at').first()
+        )
 
         if not otp_instance2:
             raise serializers.ValidationError("OTP verification entry not found or already verified.")
 
         otp_instance2.is_verified = True
+        otp_instance2.verified_at = timezone.now()
         otp_instance2.save()
 
         return temp_user
@@ -159,6 +184,7 @@ class SetPasswordSerializer(serializers.Serializer):
         )
         return user
 
+
 class SetPersonalInfoSerializer(serializers.ModelSerializer):
     profile_image_url = serializers.SerializerMethodField()
 
@@ -182,7 +208,7 @@ class SetPersonalInfoSerializer(serializers.ModelSerializer):
 
     def get_profile_image_url(self, obj):
         request = self.context.get('request')
-        if obj.profile_image and hasattr(obj.profile_image, 'url'):
+        if request and obj.profile_image and hasattr(obj.profile_image, 'url'):
             return request.build_absolute_uri(obj.profile_image.url)
         return None
 
@@ -190,14 +216,43 @@ class SetPersonalInfoSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not user.is_active:
             raise serializers.ValidationError("User is not active.")
-        if hasattr(user, 'personal_info'):
-            raise serializers.ValidationError("Personal info already exists for this user.")
+
+        # Check if the user already has personal info
+        personal_info = UserPersonalInfo.objects.filter(user=user).first()
+        if personal_info and personal_info.update_count >= 1:
+            raise serializers.ValidationError("You can update your personal information only once.")
+
         attrs['user'] = user
         return attrs
 
     def create(self, validated_data):
         user = validated_data.pop('user')
-        return UserPersonalInfo.objects.update_or_create(user=user, **validated_data)
+
+        try:
+            # Update or create the personal info for the user
+            user_info, created = UserPersonalInfo.objects.update_or_create(
+                user=user, defaults=validated_data
+            )
+
+            # Increment update_count only if updating an existing record
+            if not created:
+                user_info.update_count += 1
+                user_info.save()
+                print("Existing UserPersonalInfo updated.")
+            else:
+                print("New UserPersonalInfo created.")
+
+            return user_info
+
+        except IntegrityError as e:
+            raise serializers.ValidationError(f"Database error occurred: {str(e)}")
+        except Exception as e:
+            raise serializers.ValidationError(f"Unexpected error occurred: {str(e)}")
+
+
+from rest_framework import serializers
+from django.db import IntegrityError
+
 
 class SetOrganizationInfoSerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
@@ -226,48 +281,80 @@ class SetOrganizationInfoSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not user.is_active:
             raise serializers.ValidationError("User is not active.")
-        if user.role_id not in (2,3):
+
+        # Check user role for authorization
+        if user.role_id not in (2, 3):
             raise serializers.ValidationError("User is not authorized.")
-        if hasattr(user,
-                   'organization_info') and user.organization_info.logo and user.organization_info.name != '':
-            raise serializers.ValidationError("Organization info already exists for this user with a logo.")
 
-        attrs['user'] = user
-        return attrs
+        # Check if the organization info has been updated once already
+        org_info = OrganizationInfo.objects.filter(user=user).first()
+        if org_info and org_info.update_count >= 1:
+            raise serializers.ValidationError("You can update your organization information only once.")
 
-    def create(self, validated_data):
-        user = self.context['request'].user
-        OrganizationInfo.objects.update_or_create(
-            user=user,
-            defaults={
-                "name": validated_data["name"],
-                "established": validated_data.get("established"),
-                "tin": validated_data.get("tin"),
-                "bin": validated_data.get("bin"),
-                "logo": validated_data.get("logo"),
-            }
-        )
-        return user
-
-class SetFinancialInfoSerializer(serializers.Serializer):
-    bank_name = serializers.CharField(required=True)
-    branch_name = serializers.CharField(required=True)
-    account_name = serializers.CharField(required=True)
-    account_number = serializers.CharField(required=True)
-
-    def validate(self, attrs):
-        user = self.context['request'].user
-        if not user.is_active:
-            raise serializers.ValidationError("User is not active.")
-        if hasattr(user, 'financial_info'):
-            raise serializers.ValidationError("Financial info already exists for this user.")
         attrs['user'] = user
         return attrs
 
     def create(self, validated_data):
         user = validated_data.pop('user')
-        UserFinancialInfo.objects.update_or_create(user=user, **validated_data)
-        return user
+
+        try:
+            # Update or create the organization info for the user
+            org_info, created = OrganizationInfo.objects.update_or_create(
+                user=user,
+                defaults=validated_data
+            )
+
+            # Increment update_count if updating an existing record
+            if not created:
+                org_info.update_count += 1
+                org_info.save()
+                print("Existing OrganizationInfo updated.")
+            else:
+                print("New OrganizationInfo created.")
+
+            return org_info
+
+        except IntegrityError as e:
+            raise serializers.ValidationError(f"Database error occurred: {str(e)}")
+        except Exception as e:
+            raise serializers.ValidationError(f"Unexpected error occurred: {str(e)}")
+
+
+class SetFinancialInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFinancialInfo
+        fields =  [ "bank_name", "branch_name","account_name","account_number"]
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if not user.is_active:
+            raise serializers.ValidationError("User is not active.")
+
+        # Check if financial info already exists and update limit exceeded
+        financial_info = UserFinancialInfo.objects.filter(user=user).first()
+        if financial_info and financial_info.update_count >= 1:
+            raise serializers.ValidationError("You can update your financial information only once.")
+
+        attrs['user'] = user
+        return attrs
+
+    def create(self, validated_data):
+        user = validated_data.pop('user')
+
+        # Update or create the financial info for the user
+        financial_info, created = UserFinancialInfo.objects.update_or_create(
+            user=user,
+            defaults=validated_data
+        )
+
+        # Increment update_count if updating an existing record
+        if not created:
+            financial_info.update_count += 1
+            financial_info.save()
+            print("Existing Financial Info updated.")
+        else:
+            print("New Financial Info created.")
+
+        return financial_info
 
 class SetNomineeInfoSerializer(serializers.Serializer):
     nominee_name = serializers.CharField(required=True)
@@ -333,21 +420,29 @@ class InsuranceCompanySerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user']
 
+from rest_framework import serializers
+from rest_framework import serializers
+
 class UserSerializer(serializers.ModelSerializer):
-    personal_info = UserPersonalInfoSerializer()
-    financial_info = UserFinancialInfoSerializer()
-    nominee_info = UserNomineeInfoSerializer()
+    personal_info = UserPersonalInfoSerializer(required=False)
+    financial_info = UserFinancialInfoSerializer(required=False)
+    nominee_info = UserNomineeInfoSerializer(required=False)
     organization_info = OrganizationInfoSerializer(required=False)
 
     class Meta:
         model = User
         fields = [
-            'id', 'mobile_number', 'password', 'role','managed_by','onboarded_by',
+            'id', 'mobile_number', 'password', 'role', 'managed_by', 'onboarded_by',
             'personal_info', 'financial_info', 'nominee_info', 'organization_info',
         ]
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True, 'required': True}  # Secure password handling
         }
+
+    def validate_password(self, value):
+        if not value:
+            raise serializers.ValidationError("Password cannot be blank.")
+        return value
 
     def validate_managed_by(self, value):
         request_user = self.context['request'].user
@@ -363,49 +458,92 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Onboarded_by must be a staff or superuser.")
         return value
 
-
     def create(self, validated_data):
+        # Extract nested data
         personal_info_data = validated_data.pop('personal_info', None)
         financial_info_data = validated_data.pop('financial_info', None)
         nominee_info_data = validated_data.pop('nominee_info', None)
         organization_info_data = validated_data.pop('organization_info', None)
-        password = validated_data.pop('password')
+        password = validated_data.get('password', None)
 
+        if not password:
+            raise serializers.ValidationError({"password": ["This field cannot be blank..........."]})
+
+        # Create the user without nested data
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
 
+        # Create related objects after user creation
+
         # Personal Info
         if personal_info_data:
-            personal_info, created = UserPersonalInfo.objects.get_or_create(user=user)
-            for key, value in personal_info_data.items():
-                setattr(personal_info, key, value)
-            personal_info.save()
+            personal_info, created = UserPersonalInfo.objects.update_or_create(
+                user=user,
+                defaults=personal_info_data
+            )
+            user.personal_info = personal_info
+            user.save()
 
         # Financial Info
         if financial_info_data:
-            financial_info, created = UserFinancialInfo.objects.get_or_create(user=user)
-            for key, value in financial_info_data.items():
-                setattr(financial_info, key, value)
-            financial_info.save()
+            financial_info, created = UserFinancialInfo.objects.update_or_create(
+                user=user,
+                defaults=financial_info_data
+            )
+            user.financial_info = financial_info
+            user.save()
 
         # Nominee Info
         if nominee_info_data:
-            nominee_info, created = UserNomineeInfo.objects.get_or_create(user=user)
-            for key, value in nominee_info_data.items():
-                setattr(nominee_info, key, value)
-            nominee_info.save()
+            nominee_info, created = UserNomineeInfo.objects.update_or_create(
+                user=user,
+                defaults=nominee_info_data
+            )
+            user.nominee_info = nominee_info
+            user.save()
 
         # Organization Info (for roles 2 or 3 only)
         if organization_info_data and user.role_id in (2, 3):
-            org_info, created = OrganizationInfo.objects.get_or_create(user=user)
-            for key, value in organization_info_data.items():
-                setattr(org_info, key, value)
-            org_info.save()
+            org_info, created = OrganizationInfo.objects.update_or_create(
+                user=user,
+                defaults=organization_info_data
+            )
+            user.organization_info = org_info
+            user.save()
 
         return user
+
 
 class SubUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'mobile_number', 'role', 'is_active', 'date_joined']
+
+
+from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("New password and confirmation do not match.")
+
+        try:
+            validate_password(data['new_password'])
+        except ValidationError as e:
+            raise serializers.ValidationError({"new_password": e.messages})
+
+        return data

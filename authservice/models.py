@@ -31,6 +31,8 @@ class TempUser(TimestampModel):
     otp = models.CharField(max_length=6)
     otp_request_count = models.PositiveIntegerField(default=0)
     is_verified = models.BooleanField(default=False)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
 
 
     def __str__(self):
@@ -195,6 +197,7 @@ class UserPersonalInfo(TimestampModel):
     date_of_birth = models.DateField(null=True, blank=True)
     nid_front = models.ImageField(null=True, blank=True)
     nid_back = models.ImageField(null=True, blank=True)
+    update_count = models.PositiveIntegerField(default=0)  # Track update attempts
 
     GENDER_CHOICES = (
         ('male', 'Male'),
@@ -215,6 +218,7 @@ class OrganizationInfo(TimestampModel):
     established = models.DateField(null=True, blank=True)
     tin = models.CharField("TIN", max_length=50, null=True, blank=True)
     bin = models.CharField("BIN", max_length=50, null=True, blank=True)
+    update_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"Profile of {self.user.mobile_number}"
@@ -225,6 +229,7 @@ class UserFinancialInfo(TimestampModel):
     branch_name = models.CharField(max_length=100)
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
+    update_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"Financial Info for {self.user.mobile_number}"
@@ -235,6 +240,7 @@ class UserNomineeInfo(TimestampModel):
     phone = models.CharField(max_length=20)
     email = models.EmailField(null=True, blank=True)
     nid = models.CharField(max_length=50)
+    update_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"Nominee Info for {self.user.mobile_number}"

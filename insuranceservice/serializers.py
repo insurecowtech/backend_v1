@@ -1,14 +1,31 @@
 from rest_framework import serializers
-from .models import InsuranceCompany, InsurancePeriod, InsuranceProduct
+from .models import InsuranceCompany, InsurancePeriod, InsuranceProduct, InsuranceCategory, InsuranceType, \
+    PremiumPercentage, AssetInsurance, InsuranceClaim
 
 
-class InsuranceCompanySerializer(serializers.ModelSerializer):
+class InsuranceCategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = InsuranceCompany
-        fields = ['id', 'name', 'logo']
+        model = InsuranceCategory
+        fields = '__all__'
 
-from rest_framework import serializers
-from .models import InsuranceProduct
+
+class InsuranceTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InsuranceType
+        fields = '__all__'
+
+
+class InsurancePeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InsurancePeriod
+        fields = '__all__'
+
+
+class PremiumPercentageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PremiumPercentage
+        fields = '__all__'
+
 
 class InsuranceProductSerializer(serializers.ModelSerializer):
     company = serializers.SerializerMethodField()
@@ -44,10 +61,6 @@ class InsuranceProductSerializer(serializers.ModelSerializer):
             "value": obj.insurance_period.name
         }
 
-
-# serializers.py
-from rest_framework import serializers
-from .models import AssetInsurance, InsuranceClaim
 
 class AssetInsuranceSerializer(serializers.ModelSerializer):
     class Meta:

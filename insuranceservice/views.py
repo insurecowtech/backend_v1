@@ -1,10 +1,104 @@
 from Insurecow.utils import success_response, handle_serializer_error, validation_error_from_serializer
 from .serializers import AssetInsuranceSerializer, InsuranceClaimSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from .models import InsuranceCompany, InsuranceType, InsurancePeriod, PremiumPercentage
+from .models import InsuranceCompany, InsuranceType, InsurancePeriod, PremiumPercentage, InsuranceCategory
+
+
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .models import InsuranceCategory, InsuranceType, InsurancePeriod, PremiumPercentage
+from .serializers import InsuranceCategorySerializer, InsuranceTypeSerializer, InsurancePeriodSerializer, PremiumPercentageSerializer
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+
+class InsuranceCategoryListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.is_superuser:
+            categories = InsuranceCategory.objects.all()
+        elif request.user.role.id == 3:
+            categories = InsuranceCategory.objects.filter(company=request.user.insurance_company)
+        else:
+            raise PermissionDenied("You are not authorized to view these insurance categories.")
+
+        serializer = InsuranceCategorySerializer(categories, many=True)
+        return success_response("Insurance categories retrieved successfully.", data=serializer.data)
+
+    def post(self, request):
+        if not request.user.is_superuser and request.user.role.id != 3:
+            raise PermissionDenied("You are not authorized to create insurance categories.")
+
+        serializer = InsuranceCategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response("Insurance category created successfully.", data=serializer.data)
+        return validation_error_from_serializer(serializer)
+
+class InsuranceCategoryDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        category = get_object_or_404(InsuranceCategory, pk=pk)
+        serializer = InsuranceCategorySerializer(category)
+        return success_response("Insurance category retrieved successfully.", data=serializer.data)
+
+    def put(self, request, pk):
+        category = get_object_or_404(InsuranceCategory, pk=pk)
+        serializer = InsuranceCategorySerializer(category, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response("Insurance category updated successfully.", data=serializer.data)
+        return validation_error_from_serializer(serializer)
+
+    def delete(self, request, pk):
+        category = get_object_or_404(InsuranceCategory, pk=pk)
+        category.delete()
+        return success_response("Insurance category deleted successfully.")
+
+
+class PremiumPercentageListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        percentages = PremiumPercentage.objects.all()
+        serializer = PremiumPercentageSerializer(percentages, many=True)
+        return success_response("Premium percentages retrieved successfully.", data=serializer.data)
+
+    def post(self, request):
+        serializer = PremiumPercentageSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response("Premium percentage created successfully.", data=serializer.data)
+        return validation_error_from_serializer(serializer)
+
+
+class PremiumPercentageDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        percentage = get_object_or_404(PremiumPercentage, pk=pk)
+        serializer = PremiumPercentageSerializer(percentage)
+        return success_response("Premium percentage retrieved successfully.", data=serializer.data)
+
+    def put(self, request, pk):
+        percentage = get_object_or_404(PremiumPercentage, pk=pk)
+        serializer = PremiumPercentageSerializer(percentage, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response("Premium percentage updated successfully.", data=serializer.data)
+        return validation_error_from_serializer(serializer)
+
+    def delete(self, request, pk):
+        percentage = get_object_or_404(PremiumPercentage, pk=pk)
+        percentage.delete()
+        return success_response("Premium percentage deleted successfully.")
+
+
 
 class CompanyWiseInsuranceAPIView(APIView):
     permission_classes = [IsAuthenticated]

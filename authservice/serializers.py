@@ -356,25 +356,43 @@ class SetFinancialInfoSerializer(serializers.ModelSerializer):
 
         return financial_info
 
-class SetNomineeInfoSerializer(serializers.Serializer):
-    nominee_name = serializers.CharField(required=True)
-    phone = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
-    nid = serializers.CharField(required=True)
+class SetNomineeInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserNomineeInfo
+        fields =  [ "nominee_name", "phone","email","nid"]
 
     def validate(self, attrs):
         user = self.context['request'].user
         if not user.is_active:
             raise serializers.ValidationError("User is not active.")
-        if hasattr(user, 'nominee_info'):
-            raise serializers.ValidationError("Financial info already exists for this user.")
+
+        # Check if financial info already exists and update limit exceeded
+        nominee_info = UserNomineeInfo.objects.filter(user=user).first()
+        if nominee_info and nominee_info.update_count >= 1:
+            raise serializers.ValidationError("You can update your nominee information only once.")
+
         attrs['user'] = user
         return attrs
 
     def create(self, validated_data):
         user = validated_data.pop('user')
-        UserNomineeInfo.objects.update_or_create(user=user, **validated_data)
-        return user
+
+        # Update or create the financial info for the user
+        nominee_info, created = UserNomineeInfo.objects.update_or_create(
+            user=user,
+            defaults=validated_data
+        )
+
+        # Increment update_count if updating an existing record
+        if not created:
+            nominee_info.update_count += 1
+            nominee_info.save()
+            print("Existing Nominee Info updated.")
+        else:
+            print("New Nominee Info created.")
+
+        return nominee_info
+
 
 from rest_framework import serializers
 from .models import (

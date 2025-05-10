@@ -84,7 +84,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-
+    ekyc_status = models.IntegerField(default=0)
 
     objects = UserManager()
 
@@ -109,8 +109,36 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.onboarded_by and not (self.onboarded_by.is_staff or self.onboarded_by.is_superuser):
             raise ValidationError("Onboarded_by must be a staff or superuser.")
 
+    def calculate_ekyc_status(self):
+        """Calculate the eKYC completion status based on user role."""
+        # Skip calculation for superusers
+        if self.is_superuser:
+            self.ekyc_status = 100
+            return
+
+        # Determine the required models based on the user role
+        related_models = [
+            hasattr(self, 'personal_info') and bool(self.personal_info.first_name) and bool(
+                self.personal_info.last_name),
+            hasattr(self, 'financial_info') and bool(self.financial_info.bank_name) and bool(
+                self.financial_info.account_number),
+            hasattr(self, 'nominee_info') and bool(self.nominee_info.nominee_name) and bool(self.nominee_info.nid),
+        ]
+
+        # If the user role is 2 or 3 (organization or business), include OrganizationInfo
+        if self.role_id in [2, 3]:
+            related_models.append(
+                hasattr(self, 'organization_info') and bool(self.organization_info.name)
+            )
+
+        # Calculate the completion percentage
+        completed_count = sum(1 for x in related_models if x)  # Count only True values
+        total_count = len(related_models)
+        self.ekyc_status = int((completed_count / total_count) * 100)
+
     def save(self, *args, **kwargs):
-        self.full_clean()  # triggers clean()
+        self.full_clean()
+        self.calculate_ekyc_status()# triggers clean()
         super().save(*args, **kwargs)
 
 class OTPCategory(models.TextChoices):
